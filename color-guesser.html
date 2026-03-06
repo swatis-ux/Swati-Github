@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Lab</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700&display=swap');
+
+:root {
+  --bg: #f0ede8;
+  --surface: #e8e4de;
+  --border: #d4cfc8;
+  --text: #2a2825;
+  --muted: #8a857e;
+  --accent: #5a7a6a;
+  --danger: #c4604a;
+  --success: #5a7a6a;
+  --radius: 6px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.app {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.streak {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.streak span {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Mode switcher */
+.mode-bar {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  gap: 2px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 0.45rem 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  border-radius: calc(var(--radius) - 2px);
+  transition: all 0.15s ease;
+}
+
+.mode-btn.active {
+  background: white;
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Color display */
+.color-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.swatch-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.swatch-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.swatch {
+  height: 120px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(0,0,0,0.07);
+  transition: background-color 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.swatch.target::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 6px,
+    rgba(255,255,255,0.04) 6px,
+    rgba(255,255,255,0.04) 12px
+  );
+}
+
+.swatch.guess {
+  cursor: default;
+}
+
+/* Code display under swatches */
+.code-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  min-height: 1.2em;
+}
+
+/* Sliders */
+.sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slider-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.slider-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.slider-value-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 1px 8px rgba(0,0,0,0.2);
+}
+
+.slider-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text);
+  min-width: 2.8em;
+  text-align: right;
+}
+
+.range-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--border);
+  letter-spacing: 0.02em;
+}
+
+/* Feedback bar */
+.feedback-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.feedback-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.feedback-chip.low  { color: #b07830; border-color: #d4a86a; background: #faf3e8; }
+.feedback-chip.high { color: #4a6090; border-color: #8aaad4; background: #eef2fa; }
+.feedback-chip.close { color: var(--success); border-color: #a0c4b0; background: #eef5f0; }
+.feedback-chip.exact { color: white; border-color: var(--success); background: var(--success); }
+
+/* Submit & result */
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.submit-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.submit-btn:hover { opacity: 0.85; }
+.submit-btn:active { transform: scale(0.98); }
+
+.attempts-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Result overlay on correct */
+.result-banner {
+  display: none;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  animation: slideIn 0.25s ease;
+}
+
+.result-banner.show { display: flex; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.result-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.result-color-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.next-btn {
+  margin-top: 0.4rem;
+  padding: 0.55rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.15s;
+  align-self: flex-start;
+}
+.next-btn:hover { background: var(--surface); }
+
+/* Last guess indicator */
+.last-guess-row {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  margin-top: 2px;
+  letter-spacing: 0.03em;
+}
+
+/* Tolerance meter */
+.tolerance-track {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.tolerance-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.25s ease, background 0.25s;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="header">
+    <div class="logo">Color Lab</div>
+    <div class="streak">streak <span id="streak-val">0</span></div>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn active" data-mode="hsl">HSL</button>
+    <button class="mode-btn" data-mode="rgb">RGB</button>
+    <button class="mode-btn" data-mode="hwb">HWB</button>
+  </div>
+
+  <div class="color-display">
+    <div class="swatch-wrap">
+      <div class="swatch-label">Identify this</div>
+      <div class="swatch target" id="target-swatch"></div>
+      <div class="code-display" id="target-code">—</div>
+    </div>
+    <div class="swatch-wrap">
+      <div class="swatch-label">Your guess</div>
+      <div class="swatch guess" id="guess-swatch"></div>
+      <div class="code-display" id="guess-code">—</div>
+    </div>
+  </div>
+
+  <div class="sliders" id="sliders"></div>
+
+  <div class="feedback-row" id="feedback-row"></div>
+
+  <div class="actions">
+    <button class="submit-btn" id="submit-btn">Check</button>
+    <div class="attempts-label">attempt <span id="attempt-num">1</span></div>
+  </div>
+
+  <div class="result-banner" id="result-banner">
+    <div class="result-title" id="result-title">Matched!</div>
+    <div class="result-color-name" id="result-color-name"></div>
+    <div class="result-sub" id="result-sub"></div>
+    <button class="next-btn" id="next-btn">Next color →</button>
+  </div>
+
+</div>
+
+<script>
+// ── Color name lookup ─────────────────────────────────────
+function hslToRgb(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max+min)/2;
+  if (max===min) { h=s=0; }
+  else {
+    const d = max-min;
+    s = l>0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max) {
+      case r: h = ((g-b)/d + (g<b?6:0))/6; break;
+      case g: h = ((b-r)/d + 2)/6; break;
+      case b: h = ((r-g)/d + 4)/6; break;
+    }
+  }
+  return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
+}
+
+function getColorName(targetVal) {
+  // Convert any mode to RGB first
+  let r,g,b;
+  if (mode==='rgb') { r=targetVal.r; g=targetVal.g; b=targetVal.b; }
+  else if (mode==='hsl') { [r,g,b]=hslToRgb(targetVal.h,targetVal.s,targetVal.l); }
+  else { // hwb
+    const css = `hwb(${targetVal.h} ${targetVal.w}% ${targetVal.b2}%)`;
+    // Approximate: convert hwb to hsl
+    const w=targetVal.w/100, bk=targetVal.b2/100;
+    const tot=w+bk;
+    let ws=w,bs=bk;
+    if(tot>1){ws=w/tot;bs=bk/tot;}
+    const s=(1-ws-bs);
+    const lv=(ws+s/2);
+    const sv=s===0?0:s/(1-Math.abs(2*lv-1));
+    [r,g,b]=hslToRgb(targetVal.h,sv*100,lv*100);
+  }
+
+  // Named color table (hue-based with lightness/saturation modifiers)
+  const [h,s,l] = rgbToHsl(r,g,b);
+
+  if (s < 8) {
+    if (l < 10) return 'Jet Black';
+    if (l < 25) return 'Charcoal';
+    if (l < 45) return 'Slate Grey';
+    if (l < 65) return 'Medium Grey';
+    if (l < 82) return 'Silver';
+    return 'Off White';
+  }
+
+  const names = [
+    [0,  'Red'], [15, 'Vermillion'], [30, 'Orange'], [45, 'Amber'],
+    [55, 'Gold'], [65, 'Yellow'], [80, 'Yellow-Green'], [100,'Lime'],
+    [135,'Green'], [160,'Emerald'], [175,'Teal'], [195,'Cyan'],
+    [210,'Sky Blue'], [225,'Cornflower'], [240,'Blue'], [260,'Indigo'],
+    [275,'Violet'], [290,'Purple'], [310,'Magenta'], [330,'Rose'],
+    [350,'Crimson'], [360,'Red']
+  ];
+
+  let closest = names[0][1];
+  let minDist = 360;
+  for (const [nh, name] of names) {
+    const dist = Math.abs(h - nh);
+    if (dist < minDist) { minDist = dist; closest = name; }
+  }
+
+  if (l < 22) return 'Dark ' + closest;
+  if (l > 78) return 'Light ' + closest;
+  if (s < 30) return 'Muted ' + closest;
+  if (s > 75 && l > 40 && l < 65) return 'Vivid ' + closest;
+  return closest;
+}
+
+// ── State ──────────────────────────────────────────────
+let mode = 'hsl';
+let target = {};       // {h,s,l} or {r,g,b} or {h,w,b}
+let guess  = {};
+let attempt = 1;
+let streak = 0;
+let solved = false;
+let lastGuess = null;
+
+// ── Mode configs ───────────────────────────────────────
+const MODES = {
+  hsl: {
+    channels: [
+      { key:'h', label:'Hue',        min:0,   max:360, hint:'0 = red · 120 = green · 240 = blue',  unit:'°' },
+      { key:'s', label:'Saturation', min:0,   max:100, hint:'0% = grey · 100% = fully saturated',   unit:'%' },
+      { key:'l', label:'Lightness',  min:0,   max:100, hint:'0% = black · 50% = vivid · 100% = white', unit:'%' },
+    ],
+    toCSS: (v) => `hsl(${v.h},${v.s}%,${v.l}%)`,
+    toCode: (v) => `hsl(${v.h}, ${v.s}%, ${v.l}%)`,
+    random: () => ({ h: rnd(360), s: rnd(40,90), l: rnd(35,70) }),
+    trackGrad: (key, cur) => {
+      if (key==='h') return 'linear-gradient(to right,hsl(0,70%,55%),hsl(60,70%,55%),hsl(120,70%,55%),hsl(180,70%,55%),hsl(240,70%,55%),hsl(300,70%,55%),hsl(360,70%,55%))';
+      if (key==='s') return `linear-gradient(to right,hsl(${cur.h},0%,${cur.l}%),hsl(${cur.h},100%,${cur.l}%))`;
+      if (key==='l') return `linear-gradient(to right,#000,hsl(${cur.h},${cur.s}%,50%),#fff)`;
+    }
+  },
+  rgb: {
+    channels: [
+      { key:'r', label:'Red',   min:0, max:255, hint:'0 = no red · 255 = full red',   unit:'' },
+      { key:'g', label:'Green', min:0, max:255, hint:'0 = no green · 255 = full green', unit:'' },
+      { key:'b', label:'Blue',  min:0, max:255, hint:'0 = no blue · 255 = full blue',  unit:'' },
+    ],
+    toCSS:  (v) => `rgb(${v.r},${v.g},${v.b})`,
+    toCode: (v) => `rgb(${v.r}, ${v.g}, ${v.b})`,
+    random: () => ({ r: rnd(255), g: rnd(255), b: rnd(255) }),
+    trackGrad: (key, cur) => {
+      if (key==='r') return `linear-gradient(to right,rgb(0,${cur.g},${cur.b}),rgb(255,${cur.g},${cur.b}))`;
+      if (key==='g') return `linear-gradient(to right,rgb(${cur.r},0,${cur.b}),rgb(${cur.r},255,${cur.b}))`;
+      if (key==='b') return `linear-gradient(to right,rgb(${cur.r},${cur.g},0),rgb(${cur.r},${cur.g},255))`;
+    }
+  },
+  hwb: {
+    channels: [
+      { key:'h', label:'Hue',       min:0,   max:360, hint:'0 = red · 120 = green · 240 = blue',  unit:'°' },
+      { key:'w', label:'Whiteness', min:0,   max:100, hint:'0% = no white · 100% = fully white',   unit:'%' },
+      { key:'b2',label:'Blackness', min:0,   max:100, hint:'0% = no black · 100% = fully black',   unit:'%' },
+    ],
+    toCSS:  (v) => `hwb(${v.h} ${v.w}% ${v.b2}%)`,
+    toCode: (v) => `hwb(${v.h} ${v.w}% ${v.b2}%)`,
+    random: () => ({ h: rnd(360), w: rnd(5,40), b2: rnd(5,30) }),
+    trackGrad: (key, cur) => {
+      if (key==='h')  return 'linear-gradient(to right,hsl(0,70%,55%),hsl(60,70%,55%),hsl(120,70%,55%),hsl(180,70%,55%),hsl(240,70%,55%),hsl(300,70%,55%),hsl(360,70%,55%))';
+      if (key==='w')  return `linear-gradient(to right,hwb(${cur.h} 0% ${cur.b2}%),hwb(${cur.h} 100% ${cur.b2}%))`;
+      if (key==='b2') return `linear-gradient(to right,hwb(${cur.h} ${cur.w}% 0%),hwb(${cur.h} ${cur.w}% 100%))`;
+    }
+  }
+};
+
+function rnd(max, min=0) {
+  if (typeof max === 'number' && typeof min === 'number')
+    return Math.round(min + Math.random() * (max - min));
+  return Math.round(Math.random() * max);
+}
+
+// ── Render sliders ──────────────────────────────────────
+function buildSliders() {
+  const cfg = MODES[mode];
+  const container = document.getElementById('sliders');
+  container.innerHTML = '';
+  cfg.channels.forEach(ch => {
+    const val = guess[ch.key] ?? Math.round((ch.min + ch.max) / 2);
+    guess[ch.key] = val;
+    const row = document.createElement('div');
+    row.className = 'slider-row';
+    row.innerHTML = `
+      <div class="slider-header">
+        <span class="slider-name">${ch.label}</span>
+        <span class="slider-hint">${ch.hint}</span>
+      </div>
+      <div class="slider-value-row">
+        <input type="range" min="${ch.min}" max="${ch.max}" value="${val}" data-key="${ch.key}" id="sl-${ch.key}">
+        <span class="slider-val" id="sv-${ch.key}">${val}${ch.unit}</span>
+      </div>
+      <div class="range-note">${ch.min}${ch.unit} — ${ch.max}${ch.unit}</div>
+      <div class="tolerance-track"><div class="tolerance-fill" id="tf-${ch.key}" style="width:0%;background:var(--border)"></div></div>
+      <div class="last-guess-row" id="lg-val-${ch.key}" style="display:none"></div>
+    `;
+    container.appendChild(row);
+
+    const slider = row.querySelector('input[type=range]');
+    updateTrack(slider, val, ch);
+
+    // Restore last guess label if exists
+    if (lastGuess && lastGuess[ch.key] !== undefined) {
+      const lgEl = document.getElementById(`lg-val-${ch.key}`);
+      if (lgEl) {
+        const range = ch.max - ch.min;
+        const accuracy = Math.round((1 - Math.abs(target[ch.key] - lastGuess[ch.key]) / range) * 100);
+        lgEl.textContent = `last: ${lastGuess[ch.key]}${ch.unit} · ${accuracy}%`;
+        lgEl.style.display = 'block';
+      }
+    }
+
+    slider.addEventListener('input', () => {
+      const v = parseInt(slider.value);
+      guess[ch.key] = v;
+      document.getElementById(`sv-${ch.key}`).textContent = v + ch.unit;
+      updateTrack(slider, v, ch);
+      updateGuessSwatch();
+    });
+  });
+}
+
+function updateTrack(slider, val, ch) {
+  const cfg = MODES[mode];
+  slider.style.background = cfg.trackGrad(ch.key, guess);
+}
+
+function updateGuessSwatch() {
+  const cfg = MODES[mode];
+  const css = cfg.toCSS(guess);
+  document.getElementById('guess-swatch').style.background = css;
+  document.getElementById('guess-code').textContent = cfg.toCode(guess);
+}
+
+// ── New round ────────────────────────────────────────────
+function newRound() {
+  solved = false;
+  attempt = 1;
+  document.getElementById('attempt-num').textContent = attempt;
+  document.getElementById('result-banner').classList.remove('show');
+  document.getElementById('feedback-row').innerHTML = '';
+  document.getElementById('submit-btn').disabled = false;
+  lastGuess = null;
+
+  const cfg = MODES[mode];
+  target = cfg.random();
+  document.getElementById('target-swatch').style.background = cfg.toCSS(target);
+  document.getElementById('target-code').textContent = '???';
+
+  // reset guess to midpoint
+  cfg.channels.forEach(ch => { guess[ch.key] = Math.round((ch.min + ch.max) / 2); });
+  buildSliders();
+  updateGuessSwatch();
+}
+
+// ── Submit ───────────────────────────────────────────────
+document.getElementById('submit-btn').addEventListener('click', () => {
+  if (solved) return;
+  const cfg = MODES[mode];
+  const feedback = document.getElementById('feedback-row');
+  feedback.innerHTML = '';
+
+  // Save last guess before processing
+  lastGuess = { ...guess };
+  // Update last-guess labels on sliders
+  cfg.channels.forEach(ch => {
+    const lgEl = document.getElementById(`lg-val-${ch.key}`);
+    if (lgEl) {
+      const range = ch.max - ch.min;
+      const accuracy = Math.round((1 - Math.abs(target[ch.key] - lastGuess[ch.key]) / range) * 100);
+      lgEl.textContent = `last: ${lastGuess[ch.key]}${ch.unit} · ${accuracy}%`;
+      lgEl.style.display = 'block';
+    }
+  });
+
+  let allClose = true;
+  cfg.channels.forEach(ch => {
+    const t = target[ch.key];
+    const g = guess[ch.key];
+    const range = ch.max - ch.min;
+    const diff = Math.abs(t - g);
+    const pct = diff / range;
+
+    // tolerance fill
+    const fill = document.getElementById(`tf-${ch.key}`);
+    const closeness = Math.max(0, 1 - pct * 3);
+    fill.style.width = (closeness * 100) + '%';
+    fill.style.background = pct < 0.05 ? 'var(--success)' : pct < 0.15 ? '#c4a840' : 'var(--danger)';
+
+    // chip
+    const chip = document.createElement('div');
+    chip.className = 'feedback-chip';
+    if (pct < 0.03) {
+      chip.classList.add('exact');
+      chip.textContent = ch.label + ' ✓';
+    } else if (pct < 0.12) {
+      chip.classList.add('close');
+      chip.textContent = ch.label + (g < t ? ' ↑' : ' ↓');
+      allClose = false;
+    } else {
+      chip.classList.add(g < t ? 'low' : 'high');
+      chip.textContent = ch.label + (g < t ? ' ↑↑' : ' ↓↓');
+      allClose = false;
+    }
+    feedback.appendChild(chip);
+  });
+
+  // Check win (all within 5% of range)
+  const win = cfg.channels.every(ch => {
+    const range = ch.max - ch.min;
+    return Math.abs(target[ch.key] - guess[ch.key]) / range < 0.05;
+  });
+
+  if (win) {
+    solved = true;
+    streak++;
+    document.getElementById('streak-val').textContent = streak;
+    document.getElementById('target-code').textContent = cfg.toCode(target);
+    document.getElementById('submit-btn').disabled = true;
+    const banner = document.getElementById('result-banner');
+    const colorName = getColorName(target);
+    document.getElementById('result-title').textContent = attempt === 1 ? 'Perfect first try!' : `Matched in ${attempt} attempts`;
+    document.getElementById('result-color-name').textContent = colorName;
+    document.getElementById('result-sub').textContent = cfg.toCode(target) + ' · streak ' + streak;
+    banner.classList.add('show');
+  } else {
+    attempt++;
+    document.getElementById('attempt-num').textContent = attempt;
+  }
+});
+
+// ── Next round ───────────────────────────────────────────
+document.getElementById('next-btn').addEventListener('click', newRound);
+
+// ── Mode switching ────────────────────────────────────────
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+    streak = 0;
+    document.getElementById('streak-val').textContent = 0;
+    newRound();
+  });
+});
+
+// ── Init ──────────────────────────────────────────────────
+newRound();
+</script>
+</body>
+</html>
